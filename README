@@ -18,8 +18,8 @@ This script can be run from the command-line, using Python's Tkinter GUI,
 or as a plugin for Fiji (http://Fiji.sc/Fiji).
 Launching the script without parameters will launch a Tkinter-based GUI interface.
 Tkinter is included in the standard python distribution (http://www.python.org/download/)
-To use with Fiji, copy the Scrub_Stratec_.py file to Fiji's plugins folder and it will appear
-in the Plugins menu as "Scrub Stratec"
+To use with Fiji, copy the Scrub_Stratec_.py file to Fiji's plugins folder and it will
+appear in the Plugins menu as "Scrub Stratec"
 
 The GUI implementations will ask the user for source and destination directories.
 Modified files will be in the destination directory, and the files in the source
