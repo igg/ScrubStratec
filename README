@@ -10,3 +10,5 @@ Options:
 	  specified
   -q  don't print progress information to stdout
   -h  show this help message and exit
+
+This script can be run from the command-line, using Python's Tkinter GUI, or as a Fiji plugin (http://Fiji.sc/Fiji)
