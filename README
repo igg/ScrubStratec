@@ -11,8 +11,8 @@ Options:
   -q  don't print progress information to stdout
   -h  show this help message and exit
 
-This script can be run from the command-line, using Python's Tkinter GUI, or as a plugin for
-Fiji (http://Fiji.sc/Fiji).
+This script can be run from the command-line, using Python's Tkinter GUI,
+or as a plugin for Fiji (http://Fiji.sc/Fiji).
 Copy the Scrub_Stratec_.py file to Fiji's plugins folder and it will appear
 in the Plugins menu as "Scrub Stratec"
 
