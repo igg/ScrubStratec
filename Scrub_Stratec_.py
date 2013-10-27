@@ -1,4 +1,18 @@
 #!/usr/bin/env python
+# Authored by Ilya Goldberg (igg at cathilya dot org), Oct., 2013
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import sys
 import re
@@ -266,14 +280,35 @@ def ijGUI():
 	idle_task_ij (process_files (dir_in, dir_out))
 
 
+from optparse import OptionParser
+from optparse import IndentedHelpFormatter
+import textwrap
+class IndentedHelpFormatterWithNL(IndentedHelpFormatter):
+	def format_description(self, description):
+		if not description: return ""
+		desc_width = self.width - self.current_indent
+		indent = " "*self.current_indent
+		# the above is still the same
+		bits = description.split('\n')
+		formatted_bits = [
+			textwrap.fill(bit,
+				desc_width,
+				initial_indent=indent,
+				subsequent_indent=indent)
+			for bit in bits]
+		result = "\n".join(formatted_bits) + "\n"
+		return result
+
+
 def CLI():
-	from optparse import OptionParser
-	parser = OptionParser(add_help_option = False,
+	parser = OptionParser(add_help_option = False, formatter = IndentedHelpFormatterWithNL(),
 		usage="usage: %prog [options] source-file(s)/directory [destination file/directory]",
 		description="This program modifies the headers of Stratec pQCT files to zero-out "+
-		"the Patient Name and round the DOB to the 1st of the nearest month. "+
+		"the Patient Name and round the DOB to the 1st of the nearest month.\n"+
 		"Month rounding causes a DOB of 1956-12-17 to be changed to 1957-01-01, "+
-		"and 1956-12-16 to be changed to 1956-12-01 (birth month is favored for midway dates)"
+		"and 1956-12-16 to be changed to 1956-12-01 (birth month is favored for midway dates).\n"+
+		"Without any parameters, this script will launch a Tkinter-based GUI interface.\n\n"+
+		"N.B.: It is entirely your responsibility to ensure the data is scrubbed properly."
 	)
 	parser.add_option("-f", dest="force", action="store_true", default=False,
 		help="force in-place conversion without verification when no destination is specified")
