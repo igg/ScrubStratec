@@ -108,12 +108,12 @@ def scrub_Stratec_file (path_in, path_out):
 		infile.close()
 	except Exception, e:
 		if infile and not infile.closed: infile.close()
-		raise Exception ("Could not open/read File '"+path+"': "+str(e))
+		raise Exception ("Could not open/read File '"+path_in+"': "+str(e))
 
 	# Pascal-style string at 1050 offset must end in ".typ" (ignoring case)
 	strlen = ord(header[1050])
 	if not header[1051:1051+strlen].tostring().lower().endswith ('.typ'):
-		raise Exception ("File '"+path+"' does not appear to be a Stratec file")
+		raise Exception ("File '"+path_in+"' does not appear to be a Stratec file")
 	
 	# End of file validations:
 	# Scrub the file
@@ -179,6 +179,7 @@ def process_files (in_dir, out_dir):
 	yield len([name for name in os.listdir(in_dir)])
 	for file in os.listdir(in_dir):
 		path = os.path.join(in_dir, file)
+		scrubbed = None
 		try:
 			scrubbed = scrub_Stratec_file (path, os.path.join(out_dir, file))
 		except Exception, e:
@@ -198,20 +199,27 @@ def idle_task_tk (root, progressbar, iterator):
 	try:
 		if (progressbar["value"] == 0):
 			progressbar["maximum"] = iterator.next()
-		iterator.next()
-		progressbar["value"] = progressbar["value"] + 1
-		root.after (0, idle_task_tk, root, progressbar, iterator)
+		if iterator.next():
+			progressbar["value"] = progressbar["value"] + 1
+			root.after (0, idle_task_tk, root, progressbar, iterator)
 	except:
 		return
 
 def idle_task_ij (iterator):
+	global log_str
 	index = 0
 	numfiles = iterator.next()
-	while (iterator.next()):	
-		index += 1
-		ij.IJ.showProgress(index, numfiles)
+	try:
+		while (iterator.next()):	
+			index += 1
+			ij.IJ.showProgress(index, numfiles)
+			ij.IJ.log(log_str)
+			log_str = ""
+	except Exception, e:
+		ij.IJ.log(str(e)+"\n")
 
-	ij.IJ.log(log_str)
+
+	
 
 def idle_task_CLI (iterator):
 	index = 0
