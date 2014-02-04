@@ -9,6 +9,7 @@ Without any parameters, this script will launch a Tkinter-based GUI interface.
 N.B.: It is entirely your responsibility to ensure the data is scrubbed properly!
 
 Options:
+  -d  dump file info only (path, pat. no., dob, meas date, meas no.), tab-delimited
   -f  force in-place conversion without verification when no destination is
 	  specified
   -q  don't print progress information to stdout
