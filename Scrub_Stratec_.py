@@ -139,6 +139,87 @@ def scrub_Stratec_file (path_in, path_out):
 
 	return True
 
+# returns a triple of ints: yyyy, mm, dd
+def read_Stratec_date (header, offset):
+	date = struct.unpack ('<I', header[offset:offset+4].tostring())[0] # little-endian
+	yy = int(date/10000)
+	mm = int ( (date % yy) / 100)
+	dd = int ( (date % yy) % (mm * 100))
+	return (yy,mm,dd)
+
+def read_Stratec_int16 (header, offset):
+	return struct.unpack ('<H', header[offset:offset+2].tostring())[0] # little-endian
+
+def read_Stratec_int32 (header, offset):
+	return struct.unpack ('<I', header[offset:offset+4].tostring())[0] # little-endian
+
+# This is a Pascal-style string, with the length in the first byte
+def read_Stratec_string (header, offset):
+	strlen = ord(header[offset])
+	return header[offset+1:offset+1+strlen].tostring()
+
+# Reads a stratec header into a dictionary
+def read_Stratec_header (path_in):
+
+	header_fields = {}
+
+	# These validations do not result in an exception (i.e. the file can just be ignored)
+	try:
+		is_Stratec_file (path_in)
+	except:
+		return None
+
+	fname = os.path.basename(path_in)
+
+	# Other errors here will throw Exceptions
+	# Try to open/read
+	try:
+		infile = open(path_in,'rb')
+		header = array.array('c', infile.read())
+		infile.close()
+	except Exception, e:
+		if infile and not infile.closed: infile.close()
+		raise Exception ("Could not open/read File '"+path_in+"': "+str(e))
+
+	# Pascal-style string at 1050 offset must end in ".typ" (ignoring case)
+	strlen = ord(header[1050])
+	if not header[1051:1051+strlen].tostring().lower().endswith ('.typ'):
+		raise Exception ("File '"+path_in+"' does not appear to be a Stratec file")
+	
+	# End of file validations:
+
+	# MeasDate @ 986
+	(header_fields['meas_yy'], header_fields['meas_mm'], header_fields['meas_dd']) = read_Stratec_date (header,986)
+	
+	# PatMeasNo @ 1085
+	header_fields['meas_no'] = read_Stratec_int16 (header, 1085)
+	
+	# PatNo @ 1087
+	header_fields['pat_no'] = read_Stratec_int32 (header, 1087)
+
+	# DOB at offset 1091 as little-endian 32-bit int in ISO format (yyyymmdd)
+	(header_fields['dob_yy'], header_fields['dob_mm'], header_fields['dob_dd']) = read_Stratec_date (header,1091)
+
+	# PatName @ 1099
+	header_fields['pat_name'] = read_Stratec_string (header, 1099)
+
+	# PatID @ 1282
+	header_fields['pat_ID'] = read_Stratec_string (header, 1282)
+
+	return header_fields
+
+def print_Stratec_header (path_in):
+	header_fields = read_Stratec_header (path_in)
+	if (header_fields):
+		column_list = (
+			path_in,
+			str(header_fields['pat_no']),
+			str(header_fields['dob_yy']).zfill(4)+'-'+str(header_fields['dob_mm']).zfill(2)+'-'+str(header_fields['dob_dd']).zfill(2),
+			str(header_fields['meas_yy']).zfill(4)+'-'+str(header_fields['meas_mm']).zfill(2)+'-'+str(header_fields['meas_dd']).zfill(2),
+			str(header_fields['meas_no'])
+		)
+		print  "\t".join (column_list)
+
 def quit():
 	sys.exit(0)
 
@@ -318,6 +399,8 @@ def CLI():
 		"Without any parameters, this script will launch a Tkinter-based GUI interface.\n\n"+
 		"N.B.: It is entirely your responsibility to ensure the data is scrubbed properly."
 	)
+	parser.add_option("-d", dest="dump", action="store_true", default=False,
+		help="dump file info only (path, pat. no., dob, meas date, meas no.)")
 	parser.add_option("-f", dest="force", action="store_true", default=False,
 		help="force in-place conversion without verification when no destination is specified")
 	parser.add_option("-q", dest="quiet", action="store_true", default=False,
@@ -375,7 +458,7 @@ def CLI():
 
 
 	for index in range (0,len(src_files)):
-		if not options.force:
+		if not options.force and not options.dump:
 			sys.stdout.write("process "+src_files[index]+"? [y/N/all]: ")
 			choice = raw_input().lower()
 			if not choice: choice = 'n'
@@ -385,11 +468,15 @@ def CLI():
 				continue
 
 		try:
-			scrubbed = scrub_Stratec_file (src_files[index], dst_files[index])
-		except Exception, e:
-			sys.stderr.write(str(e)+"\n")
+			if not options.dump:
+				scrubbed = scrub_Stratec_file (src_files[index], dst_files[index])
+			else:
+				print_Stratec_header (src_files[index])
+		except Exception as ex:
+			sys.stderr.write(str(type(ex))+': '+str(ex)+"\n")
+			raise
 
-		if not options.quiet:
+		if not options.quiet and not options.dump:
 			if scrubbed:
 				print src_files[index] + ": scrubbed."
 			else:
