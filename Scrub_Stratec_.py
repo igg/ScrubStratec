@@ -400,7 +400,7 @@ def CLI():
 		"N.B.: It is entirely your responsibility to ensure the data is scrubbed properly."
 	)
 	parser.add_option("-d", dest="dump", action="store_true", default=False,
-		help="dump file info only (path, pat. no., dob, meas date, meas no.)")
+		help="dump file info only (path, pat. no., pat. DOB, meas. date, meas. no.), tab-delimited")
 	parser.add_option("-f", dest="force", action="store_true", default=False,
 		help="force in-place conversion without verification when no destination is specified")
 	parser.add_option("-q", dest="quiet", action="store_true", default=False,
